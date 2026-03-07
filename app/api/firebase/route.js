@@ -1,7 +1,7 @@
-var admin = require("firebase-admin");
-var serviceAccount = require("path/to/serviceAccountKey.json");
+import { NextResponse } from "next/server";
+import { adminAuth } from "@/lib/firebase/admin";
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://ideaengine-25bb0-default-rtdb.firebaseio.com"
-});
+export async function GET() {
+    const configured = Boolean(adminAuth);
+    return NextResponse.json({ configured }, { status: 200 });
+}

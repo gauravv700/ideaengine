@@ -9,7 +9,10 @@ const Navbar = () => {
     const router = useRouter();
     const navLinks = [
         { name: 'Home', path: '/#home' },
+        { name: 'Features', path: '/#features' },
+        { name: 'Process', path: '/#process' },
         { name: 'Pricing', path: '/#pricing' },
+        { name: 'FAQ', path: '/#faq' },
         { name: 'Contact', path: '/#contact' },
         { name: 'About', path: '/#about' },
     ];
@@ -33,6 +36,16 @@ const Navbar = () => {
         });
 
         return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        const onScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+
+        onScroll();
+        window.addEventListener("scroll", onScroll);
+        return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
     const handleLogout = async () => {

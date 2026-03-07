@@ -18,6 +18,21 @@ const HomeSection = () => {
                     and generate actionable business blueprints in minutes.
                 </p>
 
+                <div className="mt-8 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                    <div className="rounded-xl border border-indigo-100 bg-white p-4">
+                        <p className="text-2xl font-bold text-indigo-700">10+</p>
+                        <p className="text-sm text-gray-600">Business dimensions captured</p>
+                    </div>
+                    <div className="rounded-xl border border-indigo-100 bg-white p-4">
+                        <p className="text-2xl font-bold text-indigo-700">30/60/90</p>
+                        <p className="text-sm text-gray-600">Day execution roadmap generated</p>
+                    </div>
+                    <div className="rounded-xl border border-indigo-100 bg-white p-4">
+                        <p className="text-2xl font-bold text-indigo-700">PDF</p>
+                        <p className="text-sm text-gray-600">Download-ready business blueprint</p>
+                    </div>
+                </div>
+
                 <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link href="/generateblueprint" className="inline-block rounded-full bg-indigo-600 text-white px-7 py-3 font-semibold hover:bg-indigo-700">
                         Start Building Blueprint

@@ -22,7 +22,7 @@ const PricingSection = () => {
     };
 
     return (
-        <section id="pricing" className="min-h-screen px-6 md:px-16 py-24 scroll-mt-24 bg-gradient-to-b from-white to-indigo-50/40">
+        <section id="pricing" className="min-h-screen px-6 md:px-16 py-24 scroll-mt-20 bg-linear-to-b from-white to-indigo-50/40">
             <div className="max-w-6xl mx-auto">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center">Pricing That Scales With You</h2>
                 <p className="mt-3 text-center text-gray-600">Start free, validate your ideas, then scale with your team.</p>

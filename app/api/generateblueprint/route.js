@@ -20,9 +20,21 @@ Use the exact sections below:
 
 User inputs:
 - Business name: ${data.businessName}
+- Business stage: ${data.businessStage}
+- Business description: ${data.businessDescription}
 - Idea: ${data.idea}
+- Employees: ${data.employees}
+- Offering type: ${data.offeringType}
+- Delivery mode: ${data.deliveryMode}
+- Service regions: ${data.serviceRegions}
+- Product/Service name: ${data.productName}
+- Product/Service description: ${data.productDescription}
 - Target audience: ${data.targetAudience}
 - Revenue model: ${data.revenueModel}
+- Initial investment: ${data.initialInvestment}
+- Expected first-year revenue: ${data.firstYearRevenue}
+- Expected yearly revenue growth: ${data.revenueGrowthRate}
+- Yearly operations cost: ${data.yearlyOperationsCost}
 - Budget range: ${data.budget}
 - Timeline: ${data.timeline}
 - Team size: ${data.teamSize}
