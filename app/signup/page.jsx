@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { auth, db } from "@/lib/firebase/firebase"
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from "firebase/auth"
 import { useRouter } from "next/navigation"
@@ -11,24 +11,6 @@ const Page = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const router = useRouter()
-
-    useEffect(() => {
-        const redirectIfLoggedIn = async () => {
-            try {
-                const res = await fetch("/api/auth", {
-                    method: "GET",
-                    credentials: "include",
-                })
-                if (res.ok) {
-                    router.replace("/")
-                }
-            } catch (error) {
-                console.error("Auth check failed:", error)
-            }
-        }
-
-        redirectIfLoggedIn()
-    }, [router])
 
     const signInWithGoogle = async () => {
         try {

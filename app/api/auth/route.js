@@ -32,7 +32,19 @@ export async function GET(req) {
 
     try {
         const decoded = await adminAuth.verifySessionCookie(session, true);
-        return NextResponse.json({ message: "Verified", user: decoded });
+        const userRecord = await adminAuth.getUser(decoded.uid);
+
+        return NextResponse.json({
+            message: "Verified",
+            user: {
+                uid: decoded.uid,
+                email: userRecord.email,
+                name: userRecord.displayName,
+                photoURL: userRecord.photoURL,
+                emailVerified: userRecord.emailVerified,
+            },
+            claims: decoded,
+        });
     } catch {
         return new Response("Invalid session", { status: 401 });
     }

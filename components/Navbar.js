@@ -3,6 +3,7 @@ import Link from 'next/link';
 import React, { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { auth } from "@/lib/firebase/firebase"
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const Navbar = () => {
     const router = useRouter();
@@ -20,30 +21,24 @@ const Navbar = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const res = await fetch("/api/auth", {
-                    method: "GET",
-                    credentials: "include",
+        const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+            if (firebaseUser) {
+                setUser((prev) => prev || {
+                    name: firebaseUser.displayName,
+                    email: firebaseUser.email,
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    setUser(data.user);
-                    console.log("User data:", data);
-                    console.log("Current user:", auth.currentUser);
-                } else {
-                    setUser(null);
-                }
-            } catch (err) {
-                console.error("Error checking auth status:", err);
+            } else {
+                setUser(null);
             }
-        };
-        checkAuth();
+        });
 
+        return () => unsubscribe();
     }, []);
 
     const handleLogout = async () => {
         try {
+            await signOut(auth);
+
             const response = await fetch("/api/auth", {
                 method: "DELETE",
                 credentials: "include",

@@ -1,92 +1,7 @@
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
+import { createPdfFromText } from "@/lib/blueprints/pdf";
 
 export const runtime = "nodejs";
-
-function escapePdfText(text) {
-    return text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
-}
-
-function wrapText(text, maxLen = 95) {
-    const words = text.split(/\s+/).filter(Boolean);
-    const lines = [];
-    let current = "";
-
-    for (const word of words) {
-        const next = current ? `${current} ${word}` : word;
-        if (next.length > maxLen) {
-            if (current) lines.push(current);
-            current = word;
-        } else {
-            current = next;
-        }
-    }
-
-    if (current) lines.push(current);
-    return lines;
-}
-
-function createPdfFromText(title, bodyText) {
-    const lines = [
-        `Blueprint: ${title || "Untitled Idea"}`,
-        "",
-        ...bodyText.split("\n").flatMap((line) => line.trim() ? wrapText(line) : [""]),
-    ];
-
-    const linesPerPage = 42;
-    const pages = [];
-    for (let i = 0; i < lines.length; i += linesPerPage) {
-        pages.push(lines.slice(i, i + linesPerPage));
-    }
-
-    const fontObjNum = 3 + pages.length * 2;
-    const objects = [];
-
-    objects.push("1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
-    const kids = pages.map((_, idx) => `${3 + idx * 2} 0 R`).join(" ");
-    objects.push(`2 0 obj\n<< /Type /Pages /Count ${pages.length} /Kids [ ${kids} ] >>\nendobj\n`);
-
-    for (let idx = 0; idx < pages.length; idx += 1) {
-        const pageObjNum = 3 + idx * 2;
-        const contentObjNum = pageObjNum + 1;
-        const pageLines = pages[idx];
-
-        const contentLines = [
-            "BT",
-            "/F1 12 Tf",
-            "50 742 Td",
-            "14 TL",
-            ...pageLines.flatMap((line) => [`(${escapePdfText(line)}) Tj`, "T*"]),
-            "ET",
-        ].join("\n");
-
-        objects.push(
-            `${pageObjNum} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontObjNum} 0 R >> >> /Contents ${contentObjNum} 0 R >>\nendobj\n`
-        );
-        objects.push(
-            `${contentObjNum} 0 obj\n<< /Length ${Buffer.byteLength(contentLines, "utf8")} >>\nstream\n${contentLines}\nendstream\nendobj\n`
-        );
-    }
-
-    objects.push(`${fontObjNum} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n`);
-
-    let pdf = "%PDF-1.4\n";
-    const offsets = [0];
-
-    for (const obj of objects) {
-        offsets.push(Buffer.byteLength(pdf, "utf8"));
-        pdf += obj;
-    }
-
-    const xrefStart = Buffer.byteLength(pdf, "utf8");
-    pdf += `xref\n0 ${objects.length + 1}\n`;
-    pdf += "0000000000 65535 f \n";
-    for (let i = 1; i < offsets.length; i += 1) {
-        pdf += `${String(offsets[i]).padStart(10, "0")} 00000 n \n`;
-    }
-
-    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-    return Buffer.from(pdf, "utf8");
-}
 
 function buildPrompt(data) {
     return `You are an expert startup strategist.
@@ -140,6 +55,29 @@ export async function POST(req) {
             return new Response("Missing GEMINI_API_KEY", { status: 500 });
         }
 
+        const userDocSnap = await adminDb.collection("users").doc(decoded.uid).get();
+        const userData = userDocSnap.exists ? userDocSnap.data() : {};
+        const plan = userData?.plan || "Starter";
+        const planLimits = { Starter: 5, Pro: 100, Team: Infinity };
+        const monthlyLimit = planLimits[plan] ?? 5;
+
+        if (Number.isFinite(monthlyLimit)) {
+            const blueprintsSnap = await adminDb.collection("blueprints").where("userId", "==", decoded.uid).get();
+            const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+            const monthlyUsed = blueprintsSnap.docs.filter((doc) => {
+                const createdAt = doc.data()?.createdAt;
+                const created = typeof createdAt?.toDate === "function" ? createdAt.toDate().getTime() : new Date(createdAt || 0).getTime();
+                return created >= cutoff;
+            }).length;
+
+            if (monthlyUsed >= monthlyLimit) {
+                return new Response(
+                    `Plan limit reached: ${plan} allows ${monthlyLimit} blueprints per 30 days.`,
+                    { status: 403 }
+                );
+            }
+        }
+
         const geminiRes = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
             {
@@ -167,11 +105,15 @@ export async function POST(req) {
         const docRef = await adminDb.collection("blueprints").add({
             userId: decoded.uid,
             createdAt: new Date(),
+            planAtGeneration: plan,
             ...payload,
             blueprintText,
         });
 
-        const pdfBuffer = createPdfFromText(payload.businessName, blueprintText);
+        const pdfBuffer = createPdfFromText(payload.businessName, blueprintText, {
+            ...payload,
+            planAtGeneration: plan,
+        });
         const filename = `${payload.businessName.replace(/[^a-z0-9]/gi, "-").toLowerCase() || "blueprint"}-${docRef.id}.pdf`;
 
         return new Response(pdfBuffer, {
