@@ -4,19 +4,22 @@ import { auth } from "@/lib/firebase/firebase"
 import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { doneProgress, startProgress } from "@/lib/nprogress"
 
 const Page = () => {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [errorMessage, setErrorMessage] = useState("")
     const router = useRouter()
 
     const handleLogin = async () => {
+        setErrorMessage("")
         if (!email || !password) {
-            console.error("Email and password are required")
+            setErrorMessage("Email and password are required.")
             return
         }
         try {
-            const user = await signInWithEmailAndPassword(auth, email, password)
+            const user = await signInWithEmailAndPassword(auth, email.trim(), password)
             const token = await user.user.getIdToken()
             const authResponse = await fetch("/api/auth", {
                 method: "POST",
@@ -26,16 +29,29 @@ const Page = () => {
             });
 
             if (!authResponse.ok) {
-                throw new Error("Failed to create session cookie")
+                const responseText = await authResponse.text()
+                const message = responseText.trim().startsWith("<!DOCTYPE")
+                    ? "Login failed because the server returned an unexpected error."
+                    : responseText
+                throw new Error(message)
             }
 
+            startProgress()
             router.push("/")
         } catch (error) {
+            doneProgress()
+            const isInvalidCredential = error?.code === "auth/invalid-credential";
+            setErrorMessage(
+                isInvalidCredential
+                    ? "Invalid email or password."
+                    : error?.message || "Login failed."
+            )
             console.error("Error logging in:", error)
         }
     }
 
     const handleGoogleLogin = async () => {
+        setErrorMessage("")
         try {
             const provider = new GoogleAuthProvider()
             const result = await signInWithPopup(auth, provider)
@@ -49,11 +65,18 @@ const Page = () => {
             })
 
             if (!authResponse.ok) {
-                throw new Error("Failed to create session cookie")
+                const responseText = await authResponse.text()
+                const message = responseText.trim().startsWith("<!DOCTYPE")
+                    ? "Google login failed because the server returned an unexpected error."
+                    : responseText
+                throw new Error(message)
             }
 
+            startProgress()
             router.push("/")
         } catch (error) {
+            doneProgress()
+            setErrorMessage(error?.message || "Google login failed.")
             console.error("Error logging in with Google:", error)
         }
     }
@@ -73,6 +96,7 @@ const Page = () => {
                     </div>
                     <button type="button" onClick={handleLogin} className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-indigo-500 focus:ring-offset-2">Login</button>
                 </form>
+                {errorMessage ? <p className="mt-3 text-sm text-red-600">{errorMessage}</p> : null}
                 <button onClick={handleGoogleLogin} className="flex items-center justify-center cursor-pointer w-full bg-white dark:bg-gray-900 border border-gray-300 rounded-md shadow-md mt-4 px-4 py-2 text-sm font-medium text-gray-800 dark:text-white hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                     <svg
                         className="h-6 w-6 mr-2"

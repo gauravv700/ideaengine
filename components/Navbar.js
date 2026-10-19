@@ -1,9 +1,10 @@
 'use client'
 import Link from 'next/link';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation';
 import { auth } from "@/lib/firebase/firebase"
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doneProgress, startProgress } from "@/lib/nprogress";
 
 const Navbar = () => {
     const router = useRouter();
@@ -16,8 +17,6 @@ const Navbar = () => {
         { name: 'Contact', path: '/#contact' },
         { name: 'About', path: '/#about' },
     ];
-
-    const ref = useRef(null);
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -63,8 +62,10 @@ const Navbar = () => {
 
             setUser(null);
             setIsMenuOpen(false);
+            startProgress();
             router.push("/login");
         } catch (error) {
+            doneProgress();
             console.error("Logout error:", error);
         }
     };
@@ -73,8 +74,7 @@ const Navbar = () => {
     const userInitial = userLabel.charAt(0).toUpperCase();
 
     return (
-        <div ref={ref}>
-            {/* <p className="w-10 h-[500px]"></p> */}
+        <div>
             <nav className={`fixed top-0 left-0 bg-indigo-500 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
                 {/* Logo */}
                 <Link href="/" className={`flex items-center cursor-pointer text-3xl font-bold text-white ${isScrolled && "invert opacity-80"}`}>

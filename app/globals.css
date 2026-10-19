@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --progress-height: 4px;
+  --progress-color: #ef4444;
+  --progress-glow: rgba(239, 68, 68, 0.45);
 }
 
 @theme inline {
@@ -20,7 +23,39 @@
 }
 
 body {
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: opacity 180ms ease;
+}
+
+body.page-loading {
+  opacity: 0.65;
+}
+
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: var(--progress-color);
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--progress-height);
+  box-shadow: 0 0 12px var(--progress-glow);
+}
+
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px var(--progress-glow), 0 0 22px var(--progress-glow);
+  opacity: 1;
+  transform: rotate(3deg) translate(0px, -4px);
 }

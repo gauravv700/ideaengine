@@ -21,8 +21,13 @@ export async function POST(req) {
             maxAge: EXPIRES_IN / 1000, // seconds
         });
         return res;
-    } catch {
-        return new Response("Unauthorized", { status: 401 });
+    } catch (error) {
+        console.error("Session cookie creation failed:", error);
+        const isInvalidToken = error?.code === "auth/invalid-id-token" || error?.code === "auth/id-token-expired";
+        return new Response(
+            isInvalidToken ? "Invalid login token" : "Failed to create session cookie",
+            { status: isInvalidToken ? 401 : 500 }
+        );
     }
 }
 

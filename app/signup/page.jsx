@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, up
 import { useRouter } from "next/navigation"
 import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import Link from "next/link"
+import { doneProgress, startProgress } from "@/lib/nprogress"
 
 const Page = () => {
     const [name, setName] = useState("")
@@ -40,8 +41,10 @@ const Page = () => {
                 createdAt: serverTimestamp(),
             }, { merge: true })
 
+            startProgress()
             router.push("/")
         } catch (error) {
+            doneProgress()
             console.error("Error during Google Sign In:", error)
         }
     }
@@ -85,8 +88,10 @@ const Page = () => {
                 role: "user",
             })
 
+            startProgress()
             router.push("/")
         } catch (err) {
+            doneProgress()
             console.error("Signup error:", err)
         }
     }
