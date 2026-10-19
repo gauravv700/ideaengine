@@ -3,6 +3,7 @@ import "nprogress/nprogress.css";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import NProgressProvider from "@/components/NProgressProvider";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,10 +26,12 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NProgressProvider>
-          <Navbar />
-          {children}
-        </NProgressProvider>
+        <Suspense>
+          <NProgressProvider>
+            <Navbar />
+            {children}
+          </NProgressProvider>
+        </Suspense>
       </body>
     </html>
   );
