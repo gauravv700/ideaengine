@@ -24,7 +24,7 @@ An AI-powered planning app that converts a founder's raw idea into a structured,
 
 <p align="center">
   <a href="https://idea-engine143.vercel.app/">
-    <img src="docs/screenshots/landing.png" alt="IdeaEngine landing page" width="900">
+    <img src="doc/screenshots/landing.png" alt="IdeaEngine landing page" width="900">
   </a>
 </p>
 
