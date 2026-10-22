@@ -22,7 +22,7 @@ export async function GET(req, { params }) {
         const data = docSnap.data();
         if (data.userId !== uid) return new Response("Forbidden", { status: 403 });
 
-        const pdfBuffer = createPdfFromText(data.businessName, data.blueprintText || "", {
+        const pdfBuffer = await createPdfFromText(data.businessName, data.blueprintText || "", {
             idea: data.idea || "",
             targetAudience: data.targetAudience || "",
             revenueModel: data.revenueModel || "",
